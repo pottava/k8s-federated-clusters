@@ -12,39 +12,39 @@ spec:
     spec:
       containers:
         - name: api
-          image: pottava/http-re:1.0
+          image: pottava/proxy:1.1
           imagePullPolicy: Always
           ports:
             - protocol: TCP
               containerPort: 8080
           env:
-          - name: APP_NODE_NAME
-            valueFrom:
-              fieldRef:
-                fieldPath: spec.nodeName
-          - name: APP_POD_NAMESPACE
-            valueFrom:
-              fieldRef:
-                fieldPath: metadata.namespace
-          - name: APP_POD_NAME
-            valueFrom:
-              fieldRef:
-                fieldPath: metadata.name
-          - name: APP_POD_IP
-            valueFrom:
-              fieldRef:
-                fieldPath: status.podIP
-          - name: APP_POD_SERVICE_ACCOUNT
-            valueFrom:
-              fieldRef:
-                fieldPath: spec.serviceAccountName
+          - name: PROXY_URL
+            value: http://localhost/
+          - name: APP_PORT
+            value: "8080"
+          - name: ACCESS_LOG
+            value: "true"
+          - name: HEALTHCHECK_PATH
+            value: /health
           resources:
             requests:
               cpu: 100m
-              memory: 50Mi
+              memory: 20Mi
           readinessProbe:
             httpGet:
               path: /health
               port: 8080
             initialDelaySeconds: 5
             timeoutSeconds: 5
+        - name: web
+          image: dockercloud/hello-world
+          ports:
+          - containerPort: 80
+            protocol: TCP
+          env:
+          - name: NAME
+            value: k8s-federated-clusters
+          resources:
+            requests:
+              cpu: 10m
+              memory: 30Mi
