@@ -139,7 +139,38 @@ $ static_ip_name=$( echo ${static_ip} | jq -r '.[0].name' )
 $ external_ip=$( echo ${static_ip} | jq -r '.[0].address' ) && echo $external_ip
 ```
 
-### 8. Deploy sample services to the clusters
+### 8. Configure Cloud Endpoints
+
+Modify the spec.yaml
+
+```
+$ cd $GOPATH/src/github.com/pottava/http-return-everything
+$ sed -i -e "s/^  version: .*/  version: \'$( date +%Y%m%d%H%M )\'/" spec.yaml
+$ sed -i -e "s/^host: localhost/host: www.${DNS_ZONE}/" spec.yaml
+```
+
+After verifing your domain ownership, deploy a new endpoint.
+
+```
+$ open https://cloud.google.com/endpoints/docs/openapi/serving-apis-from-domains
+$ gcloud service-management enable servicemanagement.googleapis.com
+$ gcloud service-management deploy spec.yaml --quiet
+```
+
+Deploy the modified deployment.
+
+```
+$ service_name=
+$ config_id=$( gcloud service-management configs list \
+    --service ${service_name} --format=json \
+    | jq "map(select(.name | index(\"${service_name}\")).id)" \
+    | jq -r "sort | .[-1]" \
+  ) && echo ${config_id}
+$ sed -i -e "s/SERVICE_NAME/${service_name}/" resources/deployment.yaml
+$ sed -i -e "s/SERVICE_CONFIG_ID/${config_id}/" resources/deployment.yaml
+```
+
+### 9. Deploy sample services to the clusters
 
 ```
 $ kubectl apply -f resources/deployment.yaml
@@ -159,7 +190,7 @@ $ for region in $( echo ${REGIONS} ); do
   done
 ```
 
-### 9. Check its behavior
+### 10. Check its behavior
 
 ```
 $ open http://${external_ip}

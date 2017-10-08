@@ -12,12 +12,14 @@ spec:
     spec:
       containers:
         - name: api
-          image: pottava/http-re:1.0
+          image: pottava/http-re:1.1
           imagePullPolicy: Always
           ports:
             - protocol: TCP
-              containerPort: 8080
+              containerPort: 9000
           env:
+          - name: API_PORT
+            value: "9000"
           - name: APP_NODE_NAME
             valueFrom:
               fieldRef:
@@ -40,8 +42,24 @@ spec:
                 fieldPath: spec.serviceAccountName
           resources:
             requests:
-              cpu: 100m
-              memory: 50Mi
+              cpu: 10m
+              memory: 20Mi
+        - name: esp
+          image: gcr.io/endpoints-release/endpoints-runtime:1
+          args: [
+            "-p", "8080",
+            "-a", "127.0.0.1:9000",
+            "-s", "www.pottava.com",
+            "-v", "2017-10-08r0",
+            "-z", "health",
+          ]
+          ports:
+            - protocol: TCP
+              containerPort: 8080
+          resources:
+            requests:
+              cpu: 70m
+              memory: 30Mi
           readinessProbe:
             httpGet:
               path: /health
