@@ -12,7 +12,7 @@ spec:
     spec:
       containers:
         - name: api
-          image: pottava/http-re:1.0
+          image: pottava/http-re:1.1
           imagePullPolicy: Always
           ports:
             - protocol: TCP
